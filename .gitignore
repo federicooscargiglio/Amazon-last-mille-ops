@@ -1,0 +1,25 @@
+# Datos: no se versionan, son pesados y regenerables/descargables (ver README)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Outputs: se regeneran corriendo los notebooks, no se guardan como fuente de verdad
+outputs/figures/*
+outputs/models/*
+!outputs/figures/.gitkeep
+!outputs/models/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+venv/
+.venv/
+env/
+*.egg-info/
+
+# Sistema
+.DS_Store
+Thumbs.db
