@@ -12,11 +12,24 @@ Este proyecto conecta directamente con experiencia operativa real: 2.5 años com
 
 🚧 En progreso — Fase 1 del roadmap de Insight (deadline: 04-sep-2026).
 
-- [ ] EDA inicial (3 gráficos exploratorios + conclusión de negocio)
+- [x] EDA inicial (3 gráficos exploratorios + conclusión de negocio) — `codigo/notebooks/01_eda_inicial.ipynb`
+- [x] Definición de la variable objetivo de riesgo de SLA (ver sección abajo)
 - [ ] Modelo predictivo de riesgo de incumplimiento de SLA
 - [ ] Dashboard ejecutivo en Power BI
 
-La conclusión de negocio de cada entregable se agrega a este README a medida que se completa — todavía no hay resultados que reportar.
+### Conclusión de negocio — EDA inicial
+
+El 93.4% de las paradas de este dataset no tiene una ventana horaria de entrega prometida al cliente registrada, por lo que el riesgo de incumplimiento de SLA no puede definirse como "incumplimiento de ventana horaria" para la mayoría de los casos — la variable objetivo del modelo se apoya en su lugar en `route_score`, el indicador de calidad que Amazon calcula para el 100% de las rutas (detalle abajo).
+
+### Definición de la variable objetivo (riesgo de SLA)
+
+**Decisión:** el target del modelo es `route_score` (`Low` / `Medium` / `High`), calculado por Amazon a nivel ruta y propagado a cada parada de esa ruta como etiqueta débil (*weak label*). Se descartó usar cumplimiento de ventana horaria como target porque no está disponible para la mayoría de los datos (ver EDA).
+
+**Por qué a nivel parada y no a nivel ruta:** con ~898K paradas en vez de ~6K rutas, el modelo cuenta con muchísimo más volumen para aprender patrones reales, y el resultado es accionable a nivel operativo — permite identificar qué paradas puntuales son de riesgo dentro de una ruta, en lugar de solo poder marcar la ruta completa como problemática sin poder decir por qué.
+
+**Limitación conocida, aceptada explícitamente:** al propagar el score de una ruta a cada una de sus paradas, no todas contribuyeron por igual a ese resultado — es una etiqueta con ruido. Se acepta este trade-off porque el ruido no está correlacionado con las variables predictoras y se diluye con el volumen de datos: la diferencia real entre grupos (por ejemplo, zonas con más incidencia de rutas `Low`) sigue siendo detectable aunque una porción de las etiquetas individuales sea imprecisa.
+
+**Pendiente para la siguiente etapa (feature engineering / modelo baseline):** la clase `Low` representa solo 1.7% de las paradas — un desbalance de clases severo que va a condicionar las métricas de evaluación (accuracy no sirve con este desbalance) y posiblemente requiera balanceo o ponderación de clases.
 
 ## Estructura del proyecto
 
