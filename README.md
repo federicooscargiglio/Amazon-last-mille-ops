@@ -14,7 +14,9 @@ Este proyecto conecta directamente con experiencia operativa real: 2.5 años com
 
 - [x] EDA inicial (3 gráficos exploratorios + conclusión de negocio) — `codigo/notebooks/01_eda_inicial.ipynb`
 - [x] Definición de la variable objetivo de riesgo de SLA (ver sección abajo)
-- [ ] Modelo predictivo de riesgo de incumplimiento de SLA
+- [x] Feature engineering: ventana horaria, densidad de paquetes, distancia a la siguiente parada y zona (ver sección abajo)
+- [x] Split train/test (por ruta completa, estratificado por `route_score`)
+- [ ] Modelo predictivo de riesgo de incumplimiento de SLA (baseline pendiente)
 - [ ] Dashboard ejecutivo en Power BI
 
 ### Conclusión de negocio — EDA inicial
@@ -30,6 +32,21 @@ El 93.4% de las paradas de este dataset no tiene una ventana horaria de entrega 
 **Limitación conocida, aceptada explícitamente:** al propagar el score de una ruta a cada una de sus paradas, no todas contribuyeron por igual a ese resultado — es una etiqueta con ruido. Se acepta este trade-off porque el ruido no está correlacionado con las variables predictoras y se diluye con el volumen de datos: la diferencia real entre grupos (por ejemplo, zonas con más incidencia de rutas `Low`) sigue siendo detectable aunque una porción de las etiquetas individuales sea imprecisa.
 
 **Pendiente para la siguiente etapa (feature engineering / modelo baseline):** la clase `Low` representa solo 1.7% de las paradas — un desbalance de clases severo que va a condicionar las métricas de evaluación (accuracy no sirve con este desbalance) y posiblemente requiera balanceo o ponderación de clases.
+
+### Feature engineering
+
+A partir de las columnas ya disponibles se construyeron cinco variables nuevas:
+
+- **Ventana horaria:** `window_duration_min` (duración de la ventana prometida al cliente, en minutos) y `franja_horaria` (madrugada/mañana/tarde/noche).
+- **Densidad de paquetes:** `volumen_promedio_paquete_cm3`, `paradas_por_ruta` y `paquetes_por_ruta`.
+- **Distancia:** `distancia_a_siguiente_km`, calculada con la fórmula de Haversine sobre el orden real de visita de cada ruta (`actual_sequences.json`), no sobre el orden en que las filas aparecen en la tabla.
+- **Zona:** `zona_riesgo_low`, la proporción histórica de paradas `Low` en cada zona — calculada **exclusivamente con el conjunto de entrenamiento** para evitar fuga de datos (ver split abajo). Las zonas no vistas en entrenamiento reciben la tasa global de `Low` como valor de referencia.
+
+### Split train/test
+
+**Decisión:** el split se hace sobre rutas completas (nunca paradas sueltas de la misma ruta repartidas entre ambos conjuntos) y estratificado por `route_score`, dado que la clase `Low` es solo 102 de 6,112 rutas (1.7%) — un split al azar puede dejarla mal representada en train o en test por pura casualidad estadística.
+
+Verificado: 0 rutas se repiten entre train y test, y la proporción de `Low`/`Medium`/`High` es casi idéntica en ambos conjuntos (~1.7% de `Low` en los dos). Resultado: `data/processed/train.parquet` (719,870 paradas) y `data/processed/test.parquet` (178,545 paradas).
 
 ## Estructura del proyecto
 
