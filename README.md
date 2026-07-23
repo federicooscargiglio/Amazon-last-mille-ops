@@ -41,7 +41,7 @@ A partir de las columnas ya disponibles se construyeron cinco variables nuevas:
 - **Ventana horaria:** `window_duration_min` (duración de la ventana prometida al cliente, en minutos) y `franja_horaria` (madrugada/mañana/tarde/noche).
 - **Densidad de paquetes:** `volumen_promedio_paquete_cm3`, `paradas_por_ruta` y `paquetes_por_ruta`.
 - **Distancia:** `distancia_a_siguiente_km`, calculada con la fórmula de Haversine sobre el orden real de visita de cada ruta (`actual_sequences.json`), no sobre el orden en que las filas aparecen en la tabla.
-- **Zona:** `zona_riesgo_low`, la proporción histórica de paradas `Low` en cada zona — calculada **exclusivamente con el conjunto de entrenamiento** para evitar fuga de datos (ver split abajo). Las zonas no vistas en entrenamiento reciben la tasa global de `Low` como valor de referencia.
+- **Zona:** `zona_riesgo_low`, la tasa de `Low` por zona con **suavizado bayesiano** — calculada **exclusivamente con el conjunto de entrenamiento** para evitar fuga de datos (ver split abajo), y corregida tras una pasada de QA (ver sección "Validación" abajo) para no confiar en zonas con muy pocas rutas de historia. Las zonas no vistas en entrenamiento reciben la tasa global de `Low` como valor de referencia.
 
 ### Split train/test
 
@@ -51,11 +51,21 @@ Verificado: 0 rutas se repiten entre train y test, y la proporción de `Low`/`Me
 
 ### Modelos: baseline vs. Random Forest (F1-05 / F1-06)
 
-**Baseline (regresión logística):** `Low` — precision 0.02 / recall 0.16 / f1 0.04. `Medium` — 0.68 / 0.59 / 0.63. `High` — 0.56 / 0.51 / 0.53. Accuracy 0.55.
+**Baseline (regresión logística):** `Low` — precision 0.02 / recall 0.18 / f1 0.04. `Medium` — 0.68 / 0.57 / 0.62. `High` — 0.55 / 0.50 / 0.52. Accuracy 0.53. ROC-AUC (ovr, macro) 0.6102.
 
-**Random Forest** (`class_weight="balanced_subsample"`, `max_depth=12`): `Low` — precision 0.02 / recall 0.18 / f1 0.04. `Medium` — 0.66 / 0.59 / 0.62. `High` — 0.56 / 0.47 / 0.51. Accuracy 0.53. ROC-AUC (ovr, macro) 0.6067.
+**Random Forest** (`class_weight="balanced_subsample"`, `max_depth=12`): `Low` — precision 0.02 / recall 0.18 / f1 0.03. `Medium` — 0.66 / 0.58 / 0.62. `High` — 0.57 / 0.45 / 0.50. Accuracy 0.52. ROC-AUC (ovr, macro) 0.6029.
 
-**Conclusión:** cambiar a un modelo no lineal no mejora de forma real la detección de rutas `Low` (16% → 18% de recall, dentro del margen de ruido). Se probó además un Random Forest sin límite de profundidad para descartar que la limitación fuera de complejidad: ese modelo memoriza train (100% en las tres clases) pero cae a 0% de recall en `Low` en test — evidencia de overfitting, no de aprendizaje real. `zona_riesgo_low` concentra el 62% de la importancia de features del modelo, señal de que no hay interacciones adicionales fuertes que el modelo esté aprovechando. Ningún modelo de los dos es confiable todavía para uso operativo; el cuello de botella parece ser de features disponibles, no de algoritmo.
+**Conclusión:** cambiar a un modelo no lineal no mejora la detección de rutas `Low` — el recall es prácticamente idéntico entre los dos modelos (18%), y el ROC-AUC de la regresión logística es levemente **mejor** que el de Random Forest, no peor. Se probó además un Random Forest sin límite de profundidad para descartar que la limitación fuera de complejidad: ese modelo memoriza train (100% en las tres clases) pero el recall de `Low` en test cae muy por debajo del modelo con profundidad limitada — evidencia de overfitting, no de aprendizaje real. `zona_riesgo_low` concentra ~61% de la importancia de features del Random Forest. Ningún modelo es confiable todavía para uso operativo.
+
+**Un modelo con una sola variable (`zona_riesgo_low`, nada más) obtiene ~17% de recall en `Low`** — prácticamente lo mismo que el modelo completo con las 14 features. Esto muestra que las demás variables de F1-04 (densidad de paquetes, distancia, ventana horaria, estación) no están aportando señal adicional para esta clase; el cuello de botella no es el algoritmo ni la falta de features en sí, es la falta de señal *nueva* — y posiblemente el tamaño de muestra (solo 102 rutas `Low` en todo el dataset).
+
+### Validación (QA) — hallazgos y una corrección propia
+
+Antes de dar por cerrado F1-05/F1-06 se corrió una pasada de validación (`data:validate-data`) sobre la metodología y los cálculos. Hallazgos:
+
+- **Significancia estadística, no solo intuición:** la diferencia de recall en `Low` entre el baseline original (sin suavizar, 16%) y el Random Forest (18%) se probó con un test de McNemar pareado sobre las mismas rutas `Low` de test — resultado estadísticamente significativo (p ≈ 0.00045), no ruido como se asumió en un primer momento. Aun así, la diferencia no es relevante para el negocio: 16% o 18%, en ambos casos el modelo deja pasar más de 8 de cada 10 rutas `Low` reales. **Significativo estadísticamente ≠ significativo para el negocio** — con suficientes datos, hasta diferencias mínimas pueden ser "reales" sin ser útiles.
+- **Target encoding sin suavizar (corregido):** `zona_riesgo_low` original usaba la tasa cruda de `Low` por zona. El 34% de las zonas de train tenían menos de 5 rutas de historia, y varias con 1 sola ruta `Low` quedaban con tasa = 100% — ruido con forma de señal fuerte. Se corrigió con suavizado bayesiano (`zona_riesgo_low = (n_low + k×tasa_global) / (n_rutas + k)`, `k=10`).
+- **Un bug propio, encontrado al re-verificar:** la primera implementación del suavizado deduplicaba por `route_id` antes de agrupar por zona, sin considerar que una ruta visita muchas zonas distintas a lo largo de sus paradas — eso descartaba casi todas las zonas de cada ruta menos una. El síntoma (zonas distintas en train cayendo de 8.720 a 3.138) hizo que un resultado inicialmente "espectacular" (recall de `Low` subiendo de 16% a 41%) resultara ser un artefacto del bug, no una mejora real. Corregido deduplicando por el par `(zone_id, route_id)`. Queda documentado en `01_eda_inicial.ipynb` (sección 14) como recordatorio: un resultado sorprendentemente bueno amerita más sospecha, no menos.
 
 ## Estructura del proyecto
 
