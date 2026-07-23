@@ -16,7 +16,8 @@ Este proyecto conecta directamente con experiencia operativa real: 2.5 años com
 - [x] Definición de la variable objetivo de riesgo de SLA (ver sección abajo)
 - [x] Feature engineering: ventana horaria, densidad de paquetes, distancia a la siguiente parada y zona (ver sección abajo)
 - [x] Split train/test (por ruta completa, estratificado por `route_score`)
-- [ ] Modelo predictivo de riesgo de incumplimiento de SLA (baseline pendiente)
+- [x] Modelo baseline: regresión logística (`codigo/notebooks/02_modelo_baseline.ipynb`)
+- [x] Iteración de modelo: Random Forest (`codigo/notebooks/03_modelo_random_forest.ipynb`)
 - [ ] Dashboard ejecutivo en Power BI
 
 ### Conclusión de negocio — EDA inicial
@@ -47,6 +48,14 @@ A partir de las columnas ya disponibles se construyeron cinco variables nuevas:
 **Decisión:** el split se hace sobre rutas completas (nunca paradas sueltas de la misma ruta repartidas entre ambos conjuntos) y estratificado por `route_score`, dado que la clase `Low` es solo 102 de 6,112 rutas (1.7%) — un split al azar puede dejarla mal representada en train o en test por pura casualidad estadística.
 
 Verificado: 0 rutas se repiten entre train y test, y la proporción de `Low`/`Medium`/`High` es casi idéntica en ambos conjuntos (~1.7% de `Low` en los dos). Resultado: `data/processed/train.parquet` (719,870 paradas) y `data/processed/test.parquet` (178,545 paradas).
+
+### Modelos: baseline vs. Random Forest (F1-05 / F1-06)
+
+**Baseline (regresión logística):** `Low` — precision 0.02 / recall 0.16 / f1 0.04. `Medium` — 0.68 / 0.59 / 0.63. `High` — 0.56 / 0.51 / 0.53. Accuracy 0.55.
+
+**Random Forest** (`class_weight="balanced_subsample"`, `max_depth=12`): `Low` — precision 0.02 / recall 0.18 / f1 0.04. `Medium` — 0.66 / 0.59 / 0.62. `High` — 0.56 / 0.47 / 0.51. Accuracy 0.53. ROC-AUC (ovr, macro) 0.6067.
+
+**Conclusión:** cambiar a un modelo no lineal no mejora de forma real la detección de rutas `Low` (16% → 18% de recall, dentro del margen de ruido). Se probó además un Random Forest sin límite de profundidad para descartar que la limitación fuera de complejidad: ese modelo memoriza train (100% en las tres clases) pero cae a 0% de recall en `Low` en test — evidencia de overfitting, no de aprendizaje real. `zona_riesgo_low` concentra el 62% de la importancia de features del modelo, señal de que no hay interacciones adicionales fuertes que el modelo esté aprovechando. Ningún modelo de los dos es confiable todavía para uso operativo; el cuello de botella parece ser de features disponibles, no de algoritmo.
 
 ## Estructura del proyecto
 
