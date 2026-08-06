@@ -18,7 +18,7 @@ Este proyecto conecta directamente con experiencia operativa real: 2.5 años com
 - [x] Split train/test (por ruta completa, estratificado por `route_score`)
 - [x] Modelo baseline: regresión logística (`codigo/notebooks/02_modelo_baseline.ipynb`)
 - [x] Iteración de modelo: Random Forest (`codigo/notebooks/03_modelo_random_forest.ipynb`)
-- [ ] Dashboard ejecutivo en Power BI
+- [~] Dashboard ejecutivo en Power BI — en progreso (ver detalle abajo)
 
 ### Conclusión de negocio — EDA inicial
 
@@ -66,6 +66,24 @@ Antes de dar por cerrado F1-05/F1-06 se corrió una pasada de validación (`data
 - **Significancia estadística, no solo intuición:** la diferencia de recall en `Low` entre el baseline original (sin suavizar, 16%) y el Random Forest (18%) se probó con un test de McNemar pareado sobre las mismas rutas `Low` de test — resultado estadísticamente significativo (p ≈ 0.00045), no ruido como se asumió en un primer momento. Aun así, la diferencia no es relevante para el negocio: 16% o 18%, en ambos casos el modelo deja pasar más de 8 de cada 10 rutas `Low` reales. **Significativo estadísticamente ≠ significativo para el negocio** — con suficientes datos, hasta diferencias mínimas pueden ser "reales" sin ser útiles.
 - **Target encoding sin suavizar (corregido):** `zona_riesgo_low` original usaba la tasa cruda de `Low` por zona. El 34% de las zonas de train tenían menos de 5 rutas de historia, y varias con 1 sola ruta `Low` quedaban con tasa = 100% — ruido con forma de señal fuerte. Se corrigió con suavizado bayesiano (`zona_riesgo_low = (n_low + k×tasa_global) / (n_rutas + k)`, `k=10`).
 - **Un bug propio, encontrado al re-verificar:** la primera implementación del suavizado deduplicaba por `route_id` antes de agrupar por zona, sin considerar que una ruta visita muchas zonas distintas a lo largo de sus paradas — eso descartaba casi todas las zonas de cada ruta menos una. El síntoma (zonas distintas en train cayendo de 8.720 a 3.138) hizo que un resultado inicialmente "espectacular" (recall de `Low` subiendo de 16% a 41%) resultara ser un artefacto del bug, no una mejora real. Corregido deduplicando por el par `(zone_id, route_id)`. Queda documentado en `01_eda_inicial.ipynb` (sección 14) como recordatorio: un resultado sorprendentemente bueno amerita más sospecha, no menos.
+
+### Dashboard ejecutivo en Power BI — en progreso
+
+Archivo: `dashboard/dashboard_riesgo_sla.pbix`. Construido de forma interactiva (Claude maneja el mouse/teclado, Fede decide cada punto de diseño y responde examen antes de cerrar cada bloque — ver "Modo de trabajo en herramientas visuales" en el CLAUDE.md del proyecto).
+
+**Modelo tabular (cerrado):** esquema de estrella con `Hechos_Paradas` (grano = parada, ~898K filas) y dos dimensiones, `Dim_Ruta` (route_id, station_code, date, route_score, executor_capacity_cm3 — atributos constantes por ruta) y `Dim_Zona` (zone_id, zona_riesgo_low). Relaciones varios-a-uno verificadas. Un hallazgo de calidad de datos en el camino: 6.515 paradas (0.73%) sin `zone_id` — se optó por filtrarlas de `Dim_Zona` en vez de crear una categoría "sin zona", dado el volumen mínimo.
+
+**Medidas DAX (cerradas):** `SLA Compliance Rate` (98.29%), `Riesgo Promedio` (1.68%), `Total Rutas` (6.112), `Total Paradas` (898.415) — las cuatro verificadas contra los números ya conocidos del EDA/modelado.
+
+**Estructura de 4 páginas acordada:** Resumen Ejecutivo / Riesgo por Zona / Riesgo por Estación y Franja / Estado del Modelo (esta última traduce las métricas técnicas del modelo a lenguaje de negocio, no repite números crudos de recall/ROC-AUC).
+
+**Avance real por página:**
+- Resumen Ejecutivo: **completa** — 4 tarjetas KPI + gráfico de distribución de rutas por `route_score`.
+- Riesgo por Zona: apenas arrancada, sin visuales con datos aplicados todavía.
+- Riesgo por Estación y Franja: página creada, sin contenido.
+- Estado del Modelo: página creada, sin contenido.
+
+**Nota de proceso:** esta sesión tuvo fricción técnica recurrente ajena al contenido del dashboard — instancias duplicadas de Power BI Desktop bloqueando el archivo, un proceso zombie que requirió cerrar desde el Administrador de Tareas, y una interrupción de plataforma que impidió seguir controlando la pantalla. Ninguno de estos problemas hizo perder trabajo ya guardado, pero explican por qué el ritmo de esta sesión fue más lento de lo esperable para el contenido real construido.
 
 ## Estructura del proyecto
 
