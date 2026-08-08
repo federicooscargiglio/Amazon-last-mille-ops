@@ -73,17 +73,19 @@ Archivo: `dashboard/dashboard_riesgo_sla.pbix`. Construido de forma interactiva 
 
 **Modelo tabular (cerrado):** esquema de estrella con `Hechos_Paradas` (grano = parada, ~898K filas) y dos dimensiones, `Dim_Ruta` (route_id, station_code, date, route_score, executor_capacity_cm3 — atributos constantes por ruta) y `Dim_Zona` (zone_id, zona_riesgo_low). Relaciones varios-a-uno verificadas. Un hallazgo de calidad de datos en el camino: 6.515 paradas (0.73%) sin `zone_id` — se optó por filtrarlas de `Dim_Zona` en vez de crear una categoría "sin zona", dado el volumen mínimo.
 
-**Medidas DAX (cerradas):** `SLA Compliance Rate` (98.29%), `Riesgo Promedio` (1.68%), `Total Rutas` (6.112), `Total Paradas` (898.415) — las cuatro verificadas contra los números ya conocidos del EDA/modelado.
+**Medidas DAX (cerradas):** `SLA Compliance Rate` (98.29%), `Riesgo Promedio` (1.68%), `Total Rutas` (6.112), `Total Paradas` (898.415), `% Incumplimiento SLA` (`= 1 - [SLA Compliance Rate]`, 1.79% agregado en la matriz de estación x franja — deriva del mismo cálculo ya validado en vez de reimplementar la lógica de cumplimiento por segunda vez).
 
 **Estructura de 4 páginas acordada:** Resumen Ejecutivo / Riesgo por Zona / Riesgo por Estación y Franja / Estado del Modelo (esta última traduce las métricas técnicas del modelo a lenguaje de negocio, no repite números crudos de recall/ROC-AUC).
 
 **Avance real por página:**
 - Resumen Ejecutivo: **completa** — 4 tarjetas KPI + gráfico de distribución de rutas por `route_score`.
-- Riesgo por Zona: apenas arrancada, sin visuales con datos aplicados todavía.
-- Riesgo por Estación y Franja: página creada, sin contenido.
-- Estado del Modelo: página creada, sin contenido.
+- Riesgo por Zona: **completa** — matriz por `zone_id` con `Promedio de zona_riesgo_low` (ponderado por parada vía AVERAGEX/RELATED, no por zona) y `Total Paradas`.
+- Riesgo por Estación y Franja: **completa** — matriz cruzada `station_code` x `franja_horaria` con `% Incumplimiento SLA` y `Total Paradas`. Volumen incluido a propósito: varias celdas de baja cantidad de paradas muestran 100% de incumplimiento — ruido estadístico de bajo volumen, no una alerta real, visible solo gracias a la columna de volumen al lado.
+- Estado del Modelo: **sin construir todavía**. Mensaje de negocio ya acordado con Fede (deliberadamente poco alentador, no vende nada que no esté probado): el modelo detecta menos de 2 de cada 10 rutas `Low` reales (recall ~18%) y no es confiable para uso operativo; agregar más variables no mejora la detección porque casi toda la señal viene de una sola (`zona_riesgo_low`) — el cuello de botella es la falta de historial de rutas de riesgo (102 en total), no el algoritmo. Pendiente: construir la página con este mensaje sin mostrar métricas técnicas crudas.
 
-**Nota de proceso:** esta sesión tuvo fricción técnica recurrente ajena al contenido del dashboard — instancias duplicadas de Power BI Desktop bloqueando el archivo, un proceso zombie que requirió cerrar desde el Administrador de Tareas, y una interrupción de plataforma que impidió seguir controlando la pantalla. Ninguno de estos problemas hizo perder trabajo ya guardado, pero explican por qué el ritmo de esta sesión fue más lento de lo esperable para el contenido real construido.
+**Nota de proceso (sesión 06-ago):** instancias duplicadas de Power BI Desktop bloqueando el archivo, un proceso zombie cerrado desde el Administrador de Tareas, e interrupción de plataforma.
+
+**Nota de proceso (sesión 08-ago):** se repitió el mismo problema de instancias duplicadas de Power BI Desktop — en un momento hubo hasta 4 ventanas del mismo archivo abiertas simultáneamente por el robo de foco intermitente de Chrome, lo que causó la pérdida de una versión de la matriz de estación x franja (tuvo que rehacerse, no afectó el resultado final pero sí el tiempo). Fede tuvo que intervenir manualmente cerrando ventanas de más. Sigue siendo un problema no resuelto de la mecánica de trabajo interactivo, a tener en cuenta para la próxima sesión de Power BI: guardar con más frecuencia y verificar el número de ventanas abiertas antes de cada bloque de edición.
 
 ## Estructura del proyecto
 
