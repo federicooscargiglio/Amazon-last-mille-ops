@@ -1,0 +1,115 @@
+{
+  "name": "Logistica Riesgo SLA",
+  "dataColors": [
+    "#1B4B91",
+    "#2E86AB",
+    "#F2A65A",
+    "#C62828",
+    "#2E7D32",
+    "#6C757D",
+    "#8CA6C9",
+    "#5B3E96"
+  ],
+  "background": "#FFFFFF",
+  "backgroundLight": "#F4F6FA",
+  "backgroundNeutral": "#E9ECF2",
+  "foreground": "#1B2A4A",
+  "foregroundNeutralSecondary": "#5B6B87",
+  "foregroundNeutralTertiary": "#8894A8",
+  "tableAccent": "#1B4B91",
+  "good": "#2E7D32",
+  "neutral": "#F2A65A",
+  "bad": "#C62828",
+  "maximum": "#1B4B91",
+  "center": "#F2A65A",
+  "minimum": "#C62828",
+  "textClasses": {
+    "title": {
+      "fontSize": 16,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B2A4A"
+    },
+    "header": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B2A4A"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#1B2A4A"
+    },
+    "callout": {
+      "fontSize": 28,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B4B91"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "fontSize": 14,
+            "fontFamily": "Segoe UI Semibold",
+            "fontColor": { "solid": { "color": "#1B2A4A" } },
+            "background": { "solid": { "color": "#FFFFFF" } },
+            "alignment": "left"
+          }
+        ],
+        "background": [
+          {
+            "color": { "solid": { "color": "#FFFFFF" } },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": { "solid": { "color": "#E1E5EC" } },
+            "radius": 6
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true,
+            "color": { "solid": { "color": "#1B2A4A" } },
+            "preset": "1",
+            "position": "bottomCenter",
+            "transparency": 90
+          }
+        ],
+        "outspacePane": [
+          {
+            "backgroundColor": { "solid": { "color": "#F4F6FA" } }
+          }
+        ]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [
+          {
+            "color": { "solid": { "color": "#1B4B91" } },
+            "fontSize": 28,
+            "fontFamily": "Segoe UI Semibold"
+          }
+        ],
+        "categoryLabels": [
+          {
+            "color": { "solid": { "color": "#5B6B87" } },
+            "fontSize": 11,
+            "fontFamily": "Segoe UI"
+          }
+        ]
+      }
+    },
+    "textbox": {
+      "*": {
+        "background": [
+          { "show": false }
+        ]
+      }
+    }
+  }
+}
