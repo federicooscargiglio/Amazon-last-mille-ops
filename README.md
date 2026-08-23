@@ -1,16 +1,24 @@
 # Optimización de Rutas de Última Milla
 
-Proyecto de portfolio — Fase 1 de **Insight** (consultora de datos + IA aplicada a e-commerce, logística y fulfillment operations).
+Proyecto de portfolio — Fase 1 de **Insight Ops** (consultora de datos + IA aplicada a e-commerce, logística y fulfillment operations).
 
 ## Objetivo
 
 Analizar el dataset [Amazon Last Mile Routing Research Challenge](https://registry.opendata.aws/amazon-last-mile-challenges/) para identificar patrones de riesgo de incumplimiento de SLA en la última milla, y construir un modelo predictivo simple de ese riesgo junto con un dashboard ejecutivo en Power BI.
 
-Este proyecto conecta directamente con experiencia operativa real: 2.5 años como Courier y luego Dispatcher en Amazon Logistics (Berlín), gestionando KPIs de cumplimiento (SLA, delivery rate, incidentes) en 50+ rutas diarias.
+## Por qué este proyecto
+
+Antes de tocar un dataset de logística en Python, pasé 2.5 años adentro de una operación de última milla real: Courier y después Dispatcher en Amazon Logistics, Berlín (feb 2023 - dic 2025). Como dispatcher gestionaba KPIs de cumplimiento — SLA, delivery rate, incidentes — sobre más de 50 rutas diarias, coordinando con couriers en alemán, inglés e italiano. No es una anécdota de CV: es la razón concreta por la que este proyecto está armado como está.
+
+Desde ese lado del mostrador, "una ruta con riesgo de incumplir SLA" no es un concepto abstracto — es la ruta que un dispatcher mira dos veces antes de asignarla, o el reclamo que llega a la tarde porque una parada se demoró más de lo esperado. Este proyecto toma esa pregunta operativa (¿qué rutas o zonas tienen más probabilidad de fallar el SLA, y por qué?) y la lleva al terreno de datos: un modelo que estima ese riesgo por parada, y un dashboard pensado para que alguien en el rol que yo tenía pueda usarlo antes de asignar rutas, no solo para revisarlo después de que el problema ya pasó.
+
+También es, a propósito, un proyecto honesto sobre sus propias limitaciones. El modelo actual detecta menos de 2 de cada 10 rutas de alto riesgo reales (recall ~18%) — no es apto para uso operativo todavía, y el dashboard lo dice así de claro en vez de maquillarlo. El cuello de botella no es el algoritmo: son apenas 102 rutas de alto riesgo en todo el historial disponible para entrenar. Prefiero mostrar ese límite con números en vez de vender un resultado que no sostendría frente a un cliente o en una entrevista.
+
+Este es el primer proyecto de portfolio de **Insight Ops**, mi consultora de datos + IA para operaciones de reparto y última milla — la fase de credibilidad antes de buscar clientes reales (ver roadmap en la sección de estado más abajo).
 
 ## Estado actual
 
-🚧 En progreso — Fase 1 del roadmap de Insight (deadline: 04-sep-2026).
+🚧 En progreso — Fase 1 del roadmap de Insight Ops (deadline: 04-sep-2026).
 
 - [x] EDA inicial (3 gráficos exploratorios + conclusión de negocio) — `codigo/notebooks/01_eda_inicial.ipynb`
 - [x] Definición de la variable objetivo de riesgo de SLA (ver sección abajo)
