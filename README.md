@@ -66,10 +66,29 @@ Antes de dar por cerrada esta etapa se corrió una pasada de validación sobre l
 
 El archivo `.pbix` no se versiona en este repositorio — pesa ~46 MB y Git guardaría una copia completa por cada versión guardada, por el mismo criterio con el que se excluyen `data/` y `outputs/`. El dashboard tiene cuatro páginas, cada una con un objetivo de audiencia distinto:
 
-- **Resumen Ejecutivo** — 4 tarjetas KPI, distribución de rutas por `route_score` y gráfico de anillos (SLA Compliance Rate vs. % Incumplimiento SLA).
-- **Riesgo por Zona** — matriz por zona con riesgo promedio y volumen de paradas, más el ranking de las 10 zonas de mayor riesgo.
-- **Riesgo por Estación y Franja** — matriz cruzada `station_code` x `franja_horaria` con % de incumplimiento y mapa de calor condicional. El volumen de paradas se muestra al lado a propósito: varias celdas de bajo volumen muestran 100% de incumplimiento, que es ruido estadístico y no una alerta real sin esa columna de contexto.
-- **Estado del Modelo** — traduce las métricas técnicas a lenguaje de negocio: qué tan confiable es el modelo hoy, y por qué, sin exponer métricas crudas de recall/ROC-AUC fuera de contexto.
+### 1. Resumen Ejecutivo
+
+Cuatro tarjetas KPI, distribución de rutas por `route_score` y gráfico de anillos (SLA Compliance Rate vs. % Incumplimiento SLA). Es la vista de entrada: el estado general de la operación en una pantalla.
+
+![Resumen Ejecutivo — KPIs de cumplimiento, distribución de rutas por route_score y anillo de SLA](dashboard/img/01-resumen-ejecutivo.png)
+
+### 2. Riesgo por Zona
+
+Matriz por zona con riesgo promedio y volumen de paradas, más el ranking de las 10 zonas de mayor riesgo. Esta es la página que responde la pregunta accionable del proyecto — por dónde empezar a intervenir.
+
+![Riesgo por Zona — matriz de riesgo promedio por zona y top 10 de zonas de mayor riesgo](dashboard/img/02-riesgo-por-zona.png)
+
+### 3. Riesgo por Estación y Franja
+
+Matriz cruzada `station_code` x `franja_horaria` con % de incumplimiento y mapa de calor condicional. El volumen de paradas se muestra al lado a propósito: varias celdas de bajo volumen muestran 100% de incumplimiento, que es ruido estadístico y no una alerta real sin esa columna de contexto.
+
+![Riesgo por Estación y Franja — matriz cruzada de estación por franja horaria con mapa de calor](dashboard/img/03-riesgo-estacion-franja.png)
+
+### 4. Estado del Modelo
+
+Traduce las métricas técnicas a lenguaje de negocio: qué tan confiable es el modelo hoy, y por qué, sin exponer métricas crudas de recall/ROC-AUC fuera de contexto. La página existe para que nadie use el modelo creyendo que es algo que todavía no es.
+
+![Estado del Modelo — el dashboard declara explícitamente que el modelo no es apto para uso operativo todavía, con 18% de recall](dashboard/img/04-estado-del-modelo.png)
 
 **Modelo tabular:** esquema de estrella con `Hechos_Paradas` (grano = parada, ~898K filas) y dos dimensiones, `Dim_Ruta` (route_id, station_code, date, route_score, executor_capacity_cm3) y `Dim_Zona` (zone_id, zona_riesgo_low), con relaciones varios-a-uno. 6,515 paradas (0.73%) sin `zone_id` se filtraron de las vistas por zona dado el volumen mínimo.
 
