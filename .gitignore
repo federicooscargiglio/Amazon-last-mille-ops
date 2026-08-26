@@ -23,3 +23,7 @@ env/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Power BI: el .pbix pesa ~46 MB y Git guardaria una copia completa por cada version.
+# El dashboard se documenta con capturas en el README; el archivo no se versiona.
+dashboard/*.pbix

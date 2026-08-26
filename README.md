@@ -64,7 +64,7 @@ Antes de dar por cerrada esta etapa se corrió una pasada de validación sobre l
 
 ## Dashboard ejecutivo (Power BI)
 
-Archivo: `dashboard/dashboard_riesgo_sla.pbix`. Cuatro páginas, cada una con un objetivo de audiencia distinto:
+El archivo `.pbix` no se versiona en este repositorio — pesa ~46 MB y Git guardaría una copia completa por cada versión guardada, por el mismo criterio con el que se excluyen `data/` y `outputs/`. El dashboard tiene cuatro páginas, cada una con un objetivo de audiencia distinto:
 
 - **Resumen Ejecutivo** — 4 tarjetas KPI, distribución de rutas por `route_score` y gráfico de anillos (SLA Compliance Rate vs. % Incumplimiento SLA).
 - **Riesgo por Zona** — matriz por zona con riesgo promedio y volumen de paradas, más el ranking de las 10 zonas de mayor riesgo.
