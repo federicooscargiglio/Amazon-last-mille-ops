@@ -80,7 +80,7 @@ Matriz por zona con riesgo promedio y volumen de paradas, más el ranking de las
 
 ### 3. Riesgo por Estación y Franja
 
-Matriz cruzada `station_code` x `franja_horaria` con % de incumplimiento y mapa de calor condicional. El volumen de paradas se muestra al lado a propósito: varias celdas de bajo volumen muestran 100% de incumplimiento, que es ruido estadístico y no una alerta real sin esa columna de contexto.
+Matriz cruzada `station_code` x `franja_horaria` con % de incumplimiento y mapa de calor condicional. El volumen de paradas se muestra al lado a propósito, y el porcentaje solo se muestra cuando la celda tiene **al menos 100 paradas**: por debajo de ese umbral la celda queda vacía en vez de exhibir un porcentaje que mide azar y no operación. Con la tasa base de ~1,8%, 100 paradas equivalen a menos de 2 incumplimientos esperados — es el piso donde el número empieza a significar algo. La celda no se oculta: sigue mostrando su volumen, para que se vea que existe y que tiene poca historia.
 
 ![Riesgo por Estación y Franja — matriz cruzada de estación por franja horaria con mapa de calor](dashboard/img/03-riesgo-estacion-franja.png)
 
@@ -92,7 +92,18 @@ Traduce las métricas técnicas a lenguaje de negocio: qué tan confiable es el 
 
 **Modelo tabular:** esquema de estrella con `Hechos_Paradas` (grano = parada, ~898K filas) y dos dimensiones, `Dim_Ruta` (route_id, station_code, date, route_score, executor_capacity_cm3) y `Dim_Zona` (zone_id, zona_riesgo_low), con relaciones varios-a-uno. 6,515 paradas (0.73%) sin `zone_id` se filtraron de las vistas por zona dado el volumen mínimo.
 
-**Medidas DAX principales:** `SLA Compliance Rate` (98.29%), `Riesgo Promedio` (1.68%), `Total Rutas` (6,112), `Total Paradas` (898,415), `% Incumplimiento SLA`.
+**Medidas DAX principales:** `SLA Compliance Rate` (98.29%), `Riesgo Promedio` (1.68%), `Total Rutas` (6,112), `Total Paradas` (898,415), `% Incumplimiento SLA`, y `% Incumplimiento SLA (vol. mín.)` — esta última aplica el umbral de volumen descrito arriba:
+
+```dax
+% Incumplimiento SLA (vol. mín.) =
+IF (
+    [Total Paradas] >= 100,
+    [% Incumplimiento SLA],
+    BLANK ()
+)
+```
+
+Se resolvió con una medida y no con un filtro del objeto visual a propósito: un filtro habría eliminado filas enteras, perdiendo franjas de la misma estación que sí tienen volumen suficiente. La medida apaga únicamente la celda que no se sostiene.
 
 ## Próximos pasos
 
